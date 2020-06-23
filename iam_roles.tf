@@ -91,7 +91,6 @@ data "aws_iam_policy_document" "execution_role" {
 
     resources = ["*"]
   }
-# https://github.com/gnokoheat/ecs-with-codepipeline-example-by-terraform/blob/master/code-pipeline.tf
 }
 
 resource "aws_iam_role_policy" "execution_role" {
