@@ -1,0 +1,7 @@
+locals {
+     region_abbr = join("",[substr(split("-",tostring(data.aws_region.current.name))[0],0,1),substr(split("-",tostring(data.aws_region.current.name))[1],0,1)])
+}
+
+output "name" {
+  value = local.region_abbr
+}
