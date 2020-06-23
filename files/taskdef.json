@@ -1,0 +1,83 @@
+[
+  {
+    "essential": true,
+    "image": "906394416424.dkr.ecr.us-west-2.amazonaws.com/aws-for-fluent-bit:latest",
+    "name": "log_router",
+    "firelensConfiguration": {
+      "type": "fluentbit",
+      "options": {
+        "enable-ecs-log-metadata": "false"
+      }
+    },
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "firelens-container",
+        "awslogs-region": "us-west-2",
+        "awslogs-create-group": "true",
+        "awslogs-stream-prefix": "firelens"
+      }
+    },
+    "memoryReservation": 50
+   },
+
+  {
+    "name": "wordpress",
+    "image": "wordpress:1.",
+    "networkMode":"awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80
+      }
+    ],
+    "memory": 500,
+    "cpu": 10,
+    "logConfiguration": {
+        "logDriver": "awsfirelens",
+        "options": {
+          "Name": "cloudwatch",
+          "region": "${aws_region}",
+          "log_group_name": "firelens-wordpress",
+          "log_stream_prefix": "from-fluent-bit",
+          "auto_create_group": "true" 
+                 }
+    },
+    "dependsOn": [
+       {
+        "containerName": "mysql",
+        "condition": "START"
+       }    ],
+    "environment": [
+      {"name": "WORDPRESS_DB_USER", "value": "wordpress"},
+      {"name": "WORDPRESS_DB_PASSWORD", "value": "wordpress"},
+      {"name": "WORDPRESS_DB_HOST", "value": "127.0.0.1:3306"}
+    ]
+  },
+  {
+    "name": "mysql",
+    "image": "mysql",
+    "cpu": 10,
+    "memory": 500,
+    "essential": true,
+    "command" : ["--character-set-server=utf8mb4","--collation-server=utf8mb4_unicode_ci","--default-authentication-plugin=mysql_native_password"],
+    "logConfiguration": {
+      "logDriver": "awsfirelens",
+      "options": {
+        "Name": "cloudwatch",
+        "region": "${aws_region}", 
+        "log_key": "log", 
+        "log_group_name": "firelens-sql",
+        "log_stream_prefix": "from-fluent-bit",
+        "auto_create_group": "true" 
+      }
+    },
+    "environment": [
+      {"name": "MYSQL_ROOT_PASSWORD", "value": "password"},
+      {"name": "MYSQL_DATABASE", "value": "wordpress"},
+      {"name": "MYSQL_USER", "value": "wordpress"},
+      {"name": "MYSQL_PASSWORD", "value": "wordpress"}
+    ]
+  }
+]
